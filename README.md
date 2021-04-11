@@ -16,11 +16,39 @@
 
 **操作系统中常见的进程调度策略有哪几种：**
 
-FCFS(先来先服务)，优先级，时间片轮转，多队列、多级反馈队列。
+FCFS(先来先服务)，
 
-**进程间的通信如何实现？**
+短作业(进程)优先调度算法，
 
-现在最常见的进程间通信的方式有：信号，信号量，消息队列，共享内存，管道。
+高优先权优先调度算法
+
+时间片轮转，
+
+多队列、
+
+多级反馈队列。
+
+**进程间的通信IPC如何实现？**
+
+现在最常见的进程间通信的方式有：
+
+**信号：**信号是软件层次上对中断机制的一种模拟，是一种异步通信方式，信号可以在用户空间进程和内核之间直接交互，内核可以利用信号来通知用户空间的进程发生了哪些系统事件
+
+**信号量：**信号量是一个计数器，用于多进程对共享数据的访问，信号量的意图在于进程间同步。
+
+为了获得共享资源，进程需要执行下列操作：
+
+（1）创建一个信号量：这要求调用者指定初始值，对于二值信号量来说，它通常是1，也可是0。
+
+（2）等待一个信号量：该操作会测试这个信号量的值，如果小于0，就阻塞。也称为P操作。
+
+（3）挂出一个信号量：该操作将信号量的值加1，也称为V操作。
+
+**消息队列：**消息队列是存放在内核中的消息链表，消息队列在某个进程往一个队列写入消息之前，并不需要另外某个进程在该队列上等待消息的到达
+
+**共享内存：**使得多个进程可以可以直接读写同一块内存空间，是最快的可用IPC形式。是针对其他通信机制运行效率较低而设计的。
+
+**管道：****管**道是特殊类型的文件，在满足先入先出的原则条件下可以进行读写，但不能进行定位读写。管道是单向的，管道在打开时需要确实对方的存在，否则将阻塞
 
 信号是使用信号处理器来进行的，信号量是使用P、V操作来实现的。消息队列是比较高级的一种进程间通信方法，因为它真的可以在进程间传送消息。
 
@@ -212,6 +240,29 @@ js中我们经常会封装一个each函数用来实现迭代器。
 
 ### 4.HTTP 状态码
 
+**http keep-alive**
+
+非KeepAlive模式时，每个请求/应答客户和服务器都要新建一个连接，完成 之后立即断开连接（HTTP协议为无连接的协议）；当使用Keep-Alive模式（又称持久连接、连接重用）时，Keep-Alive功能使客户端到服 务器端的连接持续有效，当出现对服务器的后继请求时，Keep-Alive功能避免了建立或者重新建立连接。
+
+* keep-Alive模式，客户端如何判断请求所得到的响应数据已经接收完成
+
+对于非持续连接，浏览器可以通过连接是否关闭来界定请求或响应实体的边界；而对于持续连接，这种方法显然不奏效。有时，尽管我已经发送完所有数据，但浏览器并不知道这一点，它无法得知这个打开的连接上是否还会有新数据进来，
+
+1.使用消息首部字段Conent-Length
+
+Conent-Length表示实体内容长度，当客户端向服务器请求一个静态页面或者一张图片时，服务器可以很清楚的知道内容大小，然后通过Content-length消息首部字段告诉客户端 需要接收多少数据。
+
+2.使用消息首部字段Transfer-Encoding（Transfer-Encoding: chunked ）
+
+如果是动态页面等时，服务器是不可能预先知道内容大小。这时就可以使用Transfer-Encoding：chunk模式：服务器就需要使用Transfer-Encoding: chunked这样的方式来代替Content-Length。即如果要一边产生数据，一边发给客户端。数据分解成一系列数据块，并以一个或多个块发送，这样服务器可以发送数据而不需要预先知道发送内容的总大小。最后一个分块长度值必须为 0，对应的分块数据没有内容，表示实体结束。
+
+Content-Encoding 和 Transfer-Encoding 二者经常会结合来用，其实就是针对 Transfer-Encoding 的分块再进行 Content-Encoding压缩。
+
+**断开连接方式：**
+
+* 如果服务端Response Header设置了`Keep-Alive:timeout={timeout}`，客户端会就会保持此连接timeout（单位秒）时间，超时之后关闭连接。
+* 还有一种方式是接收端通在Response Header中增加`Connection close`标识，来主动告诉发送端，连接已经断开了，不能再复用了；客户端接收到此标示后，会销毁连接，再次请求时会重新建立连接。
+
 100  Continue  继续，一般在发送post请求时，已发送了http header之后服务端将返回此信息，表示确认，之后发送具体参数信息
 
 200  OK   正常返回信息
@@ -378,13 +429,19 @@ Cache-Control描述的是一个相对时间，在进行缓存命中的时候，�
 
 IP是Internet Protocol的简称，是网络层的主要协议，作用是提供不可靠、无连接的数据报传送。
 
+![图片](https://uploader.shimo.im/f/SnfYKIxYIJ2WC18Z.png!thumbnail?fileGuid=6vX3hWyqpyWTRwHj)
+
 **TCP****：**可靠，稳定 TCP的可靠体现在TCP在传递数据之前，会有三次握手来建立连接，而且在数据传递时，有确认、窗口、重传、拥塞控制机制，在数据传完后，还会断开连接用来节约系统资源。TCP的缺点： 慢，效率低，占用系统资源高，易被攻击
+
+（TCP的可靠传输是通过确认和超时重传的机制来实现的，而确认和超时重传的具体的实现是通过以字节为单位的**滑动窗口机制**来完成。虽然上层应用和TCP的交互是一次一个数据快(大小不等)，但是TCP把上层应用程序交付下来的数据看成仅仅是一串连续的无结构字节流。发送窗口:在为收到对方的ACK确认的情况下，只有发送窗口内的数据才能连续地发送出去。凡事已经发送过的数据，在未收到ACK确认之间都必须暂时保留在发送窗口内，以便超时重传使用。接收窗口:缓冲区，用来接收发送方的TCP数据段。**选择重传：**其只是选择性重发那些确实丢失的分组发送窗口的大小为m,接收窗口的大小为n。接收方先接收序号不连续的分组，并发送ACK确认，然后等待发送方重发丢失的分组(发送方每收到一个ACK确认就会关闭相应的定时器，最终没有收到ACK确认的分组的定时器超时，发送方会再次重发收到重发的分组后给予ACK确认，再对全部分组进行排序，最后交给上层应用。**流量控制：**TCP采用通知窗口实现对发送端的流量控制，通知窗口大小的单位是字节。TCP通过在TCP数据段首部的窗口字段中填入当前设定的接收窗口(即通知窗口)的大小，用来告知对方'我方当前的接收窗口大小'，以实现流量控制。通信双方的发送窗口大小由双方在连接建立是商定，在通信过程，双方可以动态地根据自己的情况调整对方的发送窗口大小。**拥塞控制：**TCP协议通过慢启动机制、拥塞避免机制、加速递减机制、快重传和快恢复机制来共同实现拥塞控制。**慢启动**通过逐步增大拥塞窗口的值来控制网络拥塞。拥塞窗口的初始值为1，每收到一个对发出的数据段的ACK确认，便将拥塞窗口的值增加1。随着传输轮次的增加，拥塞窗口的值会变得很大，因此TCP拥塞控制給慢启动增加一个阈值(又称慢启动门限)，当拥塞窗口>阈值时，就要进行尝试拥塞避免。当 拥塞窗口 < 阈值 时，使用慢启动算法，当 拥塞窗口 ＝ 阈值时，既可以使用慢启动算法，也可时使用拥塞避免算法。随着网络拥塞的出现和变化，阈值也会不断变化。TCP拥塞控制中，阈值的初始值为16。**拥塞避免**算法的思路是让拥塞窗口缓慢地增大，呈线性增长，即每完成一个传输轮次，拥塞窗口增加1。如果在使用慢启动机制或者拥塞避免机制中，发送数据时，出现了定时器超时，便执行**加速递减机制**:立刻将阈值限置为当前拥塞窗口大小的一半，然后拥塞窗口的值重置为1，执行使用慢启动机制）
 
 **UDP****：**快，比TCP稍安全 UDP没有TCP的握手、确认、窗口、重传、拥塞控制等机制，UDP是一个无状态的传输协议，所以它在传递数据时非常快。没有TCP的这些机制，UDP较TCP被攻击者利用的漏洞就要少一些。缺点：不可靠，不稳定 因为UDP没有TCP那些可靠的机制，在数据传递时，如果网络质量不好，就会很容易丢包
 
 常见使用TCP协议的应用如下： 浏览器，用的HTTP FlashFXP，用的FTP Outlook，用的POP、SMTP Putty，用的Telnet、SSH QQ文件传输
 
 UDP： 当对网络通讯质量要求不高的时候，要求网络通讯速度能尽量的快，这时就可以使用UDP。 比如，日常生活中，常见使用UDP协议的应用如下： QQ语音 QQ视频 TFTP
+
+
 
 **TCP传输的三次握手四次挥手策略**
 
@@ -629,6 +686,11 @@ function prototype(child, parent) {
 prototype(Child, Parent);
 ```
 * **class 类继承**
+
+**与 ES5 继承方式区别**
+
+* ES5继承实质是先创建子类的实例对象，再将父类的方法添加到 this 上 Parent.apply(this)
+* ES6继承实质是先创建父类的实例对象，所以必须先调用 super()方法，然后再用子类构造函数修改 this。
 ```javascript
 class Animal {
     constructor(name) {
@@ -678,7 +740,7 @@ this 是在函数被调用时发生的绑定，它指向什么完全取决于函
 
 * call(this, arg1, arg2, …)
 * apply(this, [arg1, arg2, …]) 而 bind() 则是创建一个新的包装函数，并且返回，而不是立刻执行。
-* bind(this, arg1, arg2, …) apply() 接收参数的形式，有助于函数嵌套函数的时候，把 arguments 变量传递到下一层函数中。 4.new 绑定 在 JavaScript 中，所有的函数都可以被 new 调用，这时候这个函数一般会被称为「构造函数」，实际上并不存在所谓「构造函数」，更确切的理解应该是对于函数的「构造调用」。
+* bind(this, arg1, arg2, …) apply() 接收参数的形式，有助于函数嵌套函数的时候，把 arguments 变量传递到下一层函数中。
 
 ![图片](https://uploader.shimo.im/f/h8caXwlPbc3xnK4s.png!thumbnail?fileGuid=6vX3hWyqpyWTRwHj)
 
@@ -729,23 +791,27 @@ this 的绑定和函数声明的位置没有任何关系，只取决于函数�
 5. 获取异步调用返回的数据
 6. 使用 JavaScript和 DOM 实现局部刷新
 ```javascript
-var xhr;
-if (window.XMLHttpRequest) {
-  //  IE7+, Firefox, Chrome, Opera, Safari 浏览器执行代码
-  xhr = new XMLHttpRequest();
-}
-else {
-  // IE6, IE5 浏览器执行代码
-  xhr = new ActiveXObject("Microsoft.XMLHTTP");
-}
-xhr.onreadystatechange = function () {
-  if (xhr.readyState == 4 && xhr.status == 200) {
-    document.getElementById("myDiv").innerHTML = xhr.responseText;
-  }
-}
-xhr.open("GET", "/try/ajax/ajax_info.txt", true);
-xhr.send();
+function ajax(options) {
+    const { path, method, data } = options;
+    return new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        request.open(method, path);
+        if (method.toLowerCase() === 'post') {
+            request.setRequestHeader('Content-Type', "application/x-www-form-urlencoded;charset=UTF-8");
+        } 
+        request.send(data);
+        request.onreadystatechange = () => {
+            if (request.readyState === 4) {
+                if (request.status >= 200 && request.status < 300) {
+                    resolve.call(null, request.responseText);
+                } else if (request.status >= 400) {
+                    reject.call(null, request)
+                }
+            }
+        }
+    })
 ```
+
 * **XHR enctype 属性规定在发送到服务器之前应该如何对表单数据进行编码**
     * **application/x-www-form-urlencoded**contentType:'application/x-www-form-urlencoded;charset=UTF-8'     data: {username: "John", password: "Boston" }
     * **multipart/form-data**processData:false, //是否自动将 data 转换为字符串。 contentType:false, // 发送信息至服务器时内容编码类型,通过设置 false 跳过设置默认值。 var formData = new FormData(document.querySelector("#data2")); （form id=“#data2”） data: formData
@@ -780,6 +846,12 @@ xhr.send();
 * jsonp
 
 ![图片](https://uploader.shimo.im/f/9mUoFcj5UNnLnlvg.png!thumbnail?fileGuid=6vX3hWyqpyWTRwHj)
+
+jsonp的安全性问题：
+
+防御：refer 白名单验证访问来源、部署随机 token 验证
+
+定义成 content-type：application/json，严格过滤 callback的参数，防止 xss 注入
 
 * **js 同源策略：**
 
@@ -850,6 +922,18 @@ xhr.send();
 一些优化:
 
 * **分代回收**——对象分为两组:“新对象”和“旧对象”。许多对象出现，完成它们的工作并迅速结 ，它们很快就会被清理干净。那些活得足够久的对象，会变“老”，并且很少接受检查。
+
+**新生代垃圾回收**
+
+from和to组成一个`Semispace`（半空间）当我们分配对象时，先在from对象中进行分配，当垃圾回收运行时先检查from中的对象，当`obj2`需要回收时将其留在from空间，而`ob1`分配到to空间，然后进行反转，将from空间和to空间进行互换，进行垃圾 回收时，将to空间的内存进行释放，简而言之from空间存放不被释放的对象，to空间存放被释放的对象，当垃圾回收时将to空间的对象全部进行回收
+
+![图片](https://uploader.shimo.im/f/BiKG7RDOASZzv1Jv.png!thumbnail?fileGuid=6vX3hWyqpyWTRwHj)
+
+新生代对象的晋升（新生代中用来存放，生命较短的对象，老生代存放生命较长的对象）
+
+* 在新生代垃圾回收的过程中，当一个对象经过多次复制后依然存活，它将会被认为是生命周期较长的对象，随后会被移动到老生代中，采取新的算法进行管理
+* 在From空间和To空间进行反转的过程中，如果To空间中的使用量已经超过了25%，那么就将From中的对象直接晋升到老生代内存空间中
+
 * **增量回收**——如果有很多对象，并且我们试图一次遍历并标记整个对象集，那么可能会花费一些时间，并在执行中会有一定的延迟。因此，引擎试图将垃圾回收分解为多个部分。然后，各个部分分别执行。这需要额外的标记来跟踪变化，这样有很多微小的延迟，而不是很大的延迟。
 * **空闲时间收集**——垃圾回收器只在 CPU 空闲时运行，以减少对执行的可能影响。
 
@@ -1057,6 +1141,8 @@ Promise.all = function(promiseArr) {
 3、吞掉错误或异常，错误只能顺序处理，即便在`Promise`链最后添加`catch`方法，依然可能存在无法捕捉的错误（`catch`内部可能会出现错误）
 
 4、阅读代码不是一眼可以看懂，你只会看到一堆`then`，必须自己在`then`的回调函数里面理清逻辑。
+
+因为Promise.all是同时运行多个promsie对象,对于同时并发数有限制的情况，可以采用顺序处理的方式
 
 **使用Promise进行顺序（sequence）处理。**
 
@@ -2572,9 +2658,9 @@ ws.onerror = function(err) {
     5. ISP DNS缓存
     6. DNS递归查询（可能存在负载均衡导致每次IP不一样）
 6. 打开一个socket与目标IP地址，端口建立TCP链接，三次握手如下：
-    1. 客户端发送一个TCP的SYN=1，Seq=X的包到服务器端口
-    2. 服务器发回SYN=1， ACK=X+1， Seq=Y的响应包
-    3. 客户端发送ACK=Y+1， Seq=Z
+    1. 客户端发送一个TCP的SYN=1，Seq=x的包到服务器端口
+    2. 服务器发回SYN=1，ACK=1, ack=x+1， Seq=y的响应包
+    3. 客户端发送ACK=1,ack=y+1， Seq=x+1
 7. TCP链接建立后发送HTTP请求
 8. 服务器接受请求并解析，将请求转发到服务程序，如虚拟主机使用HTTP Host头部判断请求的服务程序
 9. 服务器检查HTTP请求头是否包含缓存验证信息如果验证缓存新鲜，返回304等对应状态码
@@ -2729,6 +2815,14 @@ getBoundingClientRect
 
 ### 2.webpack 的理解，为什么要做三份配置文件、打包后的文件、打包优化
 
+* 用过哪些loader和plugin
+* loader的执行顺序为什么是后写的先执行
+* webpack配置优化
+* webpack打包优化（happypack、dll
+* plugin与loader的区别
+* webpack执行的过程
+* 如何编写一个loader、plugin
+* tree-shaking作用，如何才能生效
 * 开发环境与生产环境的区别
 
 开发环境
@@ -2915,6 +3009,22 @@ plugins: [  
 * 多页面应用提取页面间公共代码，以利用缓存
 * 分割代码以按需加载
 * 使用Scope Hoisting（译作“作用域提升”，是在Webpack3中推出的功能，它分析模块间的依赖关系，尽可能将被打散的模块合并到一个函数中，但不能造成代码冗余，所以只有被引用一次的模块才能被合并。由于需要分析模块间的依赖关系，所以源码必须是采用了ES6模块化的，否则Webpack会降级处理不采用Scope Hoisting。）
+
+优化
+
+1 按需加载：路由组件按需加载、按需引入第三方插件
+
+2 优化loader配置：优化正则匹配、通过 cacheDirectory 选项开启缓存、通过include、exclude减少被处理文件范围
+
+3 优化文件路径，省下搜索查找的时间：extension配置后不用再require货import时候加文件扩展名、alias配置别名加快webpack查找模块的速度
+
+4 生产环境关闭 sourceMap
+
+5 代码压缩 ParallelUglifyPlugin 多进程压缩文件
+
+6 提取公共代码commonsChunkPlugin (webpack3)、splitChunks(webpack4)
+
+7 CDN 优化
 
 ### 3.webpack 插件怎么写，webpack loader
 
@@ -3276,6 +3386,73 @@ webapp是生存在浏览器里的应用，所以只能运行在浏览器里，�
 
 ### 2.hybrid 开发中的首屏优化手段，怎么处理优化的
 
+大致思路：
+
+* 预加载和创建：能提前做好准备的都提前做好准备
+* 缓存：能缓存的都进行缓存
+* 并行：能同时进行的尽量同时进行
+* **前端优化**
+
+在过去PC和手机浏览器中，已经有无数的优化手段，总结起来无外乎以下几点：
+
+
+
+* 减少请求数量：合并资源，减少HTTP请求，懒加载，内联资源等
+* 减少请求资源大小：压缩资源，gzip，webp图片，减少cookie等
+* 提高请求速度：DNS预解析，资源预加载，CDN加速等
+* 缓存：浏览器缓存，manifest缓存等
+* 渲染：css、js加载顺序，同构直出等
+
+
+
+几乎所有的应用最先遇到的性能瓶颈都是网络请求，所以能减少请求的缓存就显得比较重要。
+
+
+
+浏览器的缓存机制这里就不做赘述，主要有通过设置`Cache-Control`等HTTP请求头的方式和PWA中利用Service Worker的方式。利用浏览器缓存机制，页面再次请求对应资源时，可以从缓存中获取，减少网络请求，而数据方面的请求，可以通过localStorage进行数据的缓存，首次渲染时可以使用本地缓存数据，然后再请求更新。
+
+通过以上手段可以使页面第二次被访问时快速打开，但是第一次访问时，依旧存在慢的问题。
+
+* 同构直出
+
+首次访问需要加载js资源，然后再发起请求，等数据返回渲染后，用户才能看到。在上古年代，页面基本上都是通过服务端渲染的，页面返回时就已经带上了数据，减少了再次数据请求的过程。借助于nodejs，client端和server端使用同一套代码，可以通过node层进行数据和模版的组装，返回首屏的内容到浏览器渲染，达到“直出”，而首屏外的内容，可以用原来的方式，请求到js资源后再进行渲染，这样可以提高首屏的速度。
+
+* 预置内联
+
+此时，页面要渲染，除了数据，还需要等待样式文件的加载，那么这一块可以优化吗？
+
+
+
+同构直出可以看作是数据内联到页面中，那么作为首屏的样式资源，其实也可以通过构建打包的流程，将其内联到页面中，那么当请求页面时，服务器返回的页面，就已经包含了首屏所需要的样式和数据，用户第一时间就可以看到页面，首屏外的样式资源，可以用原来的方式再去请求渲染。
+
+
+
+此时，对于首屏，页面打开的流程缩减为：
+
+初始化webview => 请求html => 解析首屏html、css => 渲染 => 下载图片 => 渲染 => 页面显示可交互
+
+* 客户端优化
+
+webview在启动前需要进行初始化，那么我们其实可以在webview加载页面之前就将它初始化完成，将其放入缓存池，之后直接从缓存池中获取预创建的webview，而非等到用户打开页面时再进行初始化。
+
+* 离线包
+
+之前的优化方式都是放在前端，数据源直接来源于服务端，在App中，我们是不是可以从APP中获取数据资源，在webview中无需任何请求，直接就是组装渲染？
+
+对于非个性化页面，即所有用户所见相同的页面，每个版本用户所见内容相同，那么这一块内容其实可以打成一个资源包，这个资源包包含html、css、图片和js，客户端在某个时间点可以去预先请求这个资源包，之后用户打开这个页面时，客户端拦截对应的请求地址，从本地资源包找到对应的文件返回，同时客户端提供数据源，html获取到资源和数据后进行组装渲染。
+
+离线包的方案涉及以下几个问题：
+
+
+
+* 前端工程的打包构建流程：增量、全量打包，公共资源包
+* 更新机制：增量更新和合并，全量更新
+* 安全：离线包下发版本校验，防止篡改
+* 客户端的资源拦截机制
+* 回退方案：离线包下载失败，回退到同构直出方案
+
+通过离线包的方案，在用户打开页面过程中，可以做到几乎无请求，达到秒开的效果。当然，结合几种方案，必然对前端工程的打包构建影响较大，需要设计好整个完成的打包构建方案。
+
 ### 3.hybrid 应用如何与原生应用进行交互通信
 
 * jsBridge:
@@ -3307,6 +3484,13 @@ JsBridge给JavaScript提供了调用Native功能，Native也能够操控JavaScri
 **分析url-参数和回调的格式**根据api名,在本地找寻对应的api方法,并且记录该方法执行完后的回调函数id;根据提取出来的参数,根据定义好的参数进行转化;原生本地执行对应的api功能方法;功能执行完毕后,找到这次api调用对应的回调函数id,然后连同需要传递的参数信息,组装成一个JSON格式的参数;通过JSBridge通知H5页面回调
 
 ### 4.移动端中常常出现的 click 点透现象
+
+解决方法新：
+
+* **禁用缩放**`<meta name = "viewport" content="user-scalable=no" >`缺点: 网页无法缩放。
+* **更改默认视口宽度**`<meta name="viewport" content="width=device-width">`缺点: 需要浏览器的支持
+* **css touch-action**touch-action的默为 auto，将其置为 none 即可移除目标元素的 300 毫秒延迟 缺点: 新属性，可能存在浏览器兼容问题
+* **fastclick**原理: 在检测到touchend事件的时候，会通过DOM自定义事件立即出发模拟一个click事件，并把浏览器在300ms之后真正的click事件阻止掉 缺点: 脚本相对较大
 
 **原因**： click 的延迟
 
@@ -3567,6 +3751,79 @@ pointer-events: none 可用来提高滚动时的帧频。的确，当滚动时
 
 执行复杂的脚本和低效的代码可能会耗费几十或上百毫秒——可以使用浏览器内建的开发者工具来收集概况、优化代码。
 
+### 9 1px 问题
+
+* 物理像素
+
+物理像素又称**设备像素**，是组成显示屏的基本单位，每一台设备的物理像素在出厂时就已经固定好了，不会改变，我们平时看到的图片是通过每个像素不同颜色组合而成的。
+
+设计师一般要求的像素就是物理像素。
+
+* 逻辑像素
+
+逻辑像素又称为**设备独立像素**或**CSS像素**，是组成图像的基本单位，它是一个抽象概念，我们可以笼统的认为屏幕可视区域的宽度就是逻辑像素的大小。在1倍屏下，1倍逻辑像素=1倍物理像素；2倍屏下，1倍逻辑像素=2倍物理像素。逻辑像素是可变的，例如当我们放大页面的尺寸比例时，逻辑像素也就随之扩大。
+
+前端开发者在CSS中设置的像素就是逻辑像素。
+
+* 设备像素比
+
+设备像素比描述的是物理像素和逻辑像素之间的比例关系。
+
+设备像素比 = 物理像素 / 逻辑像素。
+
+怎么获取DPR？
+
+`window.devicePixelRatio`或`@media screen and (-webkit-min-device-pixel-ratio: 2) {}`
+
+* PPI
+
+PPI指的是设备每英寸的物理像素点，说的简单点就是一英寸的屏幕中由多少个物理像素组合而成。
+
+**解决方案**
+
+CSS媒体查询方案
+
+```css
+.div {
+  border-width: 1px;
+}
+/* 两倍像素下 */
+@media screen and (-webkit-min-device-pixel-ratio: 2) {
+  .div {
+    border-width: 0.5px;
+  }
+}
+/* 三倍像素下 */
+@media screen and (-webkit-min-device-pixel-ratio: 3) {
+  .div {
+    border-width: 0.333333px;
+  }
+}
+```
+transform + 伪类
+```css
+@media (-webkit-min-device-pixel-ratio:2),(min-device-pixel-ratio:2){
+  .border-bt-1px{
+    position: relative;
+    :before{
+      content: '';
+      position: absolute;
+      left:0;           
+      bottom: 0;
+      width: 100%;
+      height: 1px;
+      background: #ee2c2c;
+      transform: scaleY(0.5);
+    }
+  }
+}
+```
+box-shadow
+```css
+.div {
+  box-shadow: inset 0px -1px 1px -1px #c8c7cc;
+}
+```
 ## 八.React Vue 框架相关
 
 ### **1 react setState  是否是异步执行的？**
@@ -3686,6 +3943,29 @@ Watcher.prototype = {
 |:----|:----|
 |响应式：Object.defineProperty|Proxy|
 
+常见问题：
+
+* watch 与 computed 的区别
+* vue生命周期及对应的行为
+* vue父子组件生命周期执行顺序
+* 组件间通讯方法
+* 如何实现一个指令
+* vue.nextTick实现原理
+* diff算法
+* 如何做到的双向绑定
+* 虚拟dom为什么快
+* 如何设计一个组件
+
+react 与 vue 区别
+
+相同：
+
+数据驱动页面，提供响应式组件；都有virtural dom；支持ssr；都有支持native瘦的
+
+不同：
+
+数据绑定 vue 双向，react 单向数据流；react jsx，vue vue模板；
+
 ### 5 react diff 策略
 
 * tree diff React 对树的算法进行了简洁明了的优化，即对树进行分层比较，两棵树只会对同一层次的节点进行比较。
@@ -3715,6 +3995,29 @@ Fiber解决这个问题的思路是把渲染/更新过程（递归diff）拆分�
 非受控组件: 非受控组件即组件的状态改变不受控制
 
 受控组件: 其值由React控制的输入表单元素称为“受控组件”.在受控组件中，表单数据由 React 组件处理。如果让表单数据由 DOM 处理时，替代方案为使用非受控组件。
+
+### 7 react 生命周期
+
+原来的（v16前）的生命周期在推出 Fiber 之后就不合适了，因为如果要开启async rendering,在render 函数之前的所有函数都有可能被执行多次。其中包括：
+
+* componentWillMount
+* componentWillReceiveProps
+* shouldComponentUpdate
+* componentWillUpdate
+
+禁止不能用比劝导开发者不要这样用的效果更好，所以除了shouldComponentUpdate，其他在render函数之前的所有函数（componentWillMount，componentWillReceiveProps，componentWillUpdate）都被getDerivedStateFromProps替代。
+
+也就是用一个静态函数getDerivedStateFromProps来取代被deprecate的几个生命周期函数，就是强制开发者在render之前只做无副作用的操作，而且能做的操作局限在根据props和state决定新的state
+
+注意：
+
+1. getDerivedStateFromProps前面要加上static保留字，声明为静态方法，不然会被react忽略掉
+
+2.getDerivedStateFromProps里面的this为undefined：static静态方法只能Class(构造函数)来调用(App.staticMethod✅)，而实例是不能的( (new App()).staticMethod ❌ )；
+
+3.getSnapshotBeforeUpdate：***getSnapshotBeforeUpdate()***被调用于render之后，可以读取但无法使用DOM的时候。它使您的组件可以在可能更改之前从DOM捕获一些信息（例如滚动位置）。此生命周期返回的任何值都将作为参数传递给componentDidUpdate（）。
+
+
 
 ## 七.基础代码实现
 
@@ -3825,7 +4128,110 @@ function bfsTree(node) {
 ### 
 ### 6.封装一个 ajax 库实现 get 和 post 方法
 
-### 7.实现一个 promise
+```javascript
+// 通用 promise 版
+function ajax(options) {
+    const { path, method, data } = options;
+    return new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        request.open(method, path);
+        if (method.toLowerCase() === 'post') {
+            request.setRequestHeader('Content-Type', "application/x-www-form-urlencoded;charset=UTF-8");
+        } 
+        request.send(data);
+        request.onreadystatechange = () => {
+            if (request.readyState === 4) {
+                if (request.status >= 200 && request.status < 300) {
+                    resolve.call(null, request.responseText);
+                } else if (request.status >= 400) {
+                    reject.call(null, request)
+                }
+            }
+        }
+    })
+```
+### 7.使用 promise.all 解决并发的情况
+
+1. 初始化`limit`个Promise对象，作为`Promise.all`的参数
+2. 每个Promise对象去`imageUrls`中取出一个url进行请求，若无则resolve
+3. 每个Promise对象在当前请求成功后重复步骤2
+```javascript
+function fetchImageWithLimit(imageUrls, limit, handler ) {
+  // copy一份，作为剩余url的记录
+  let urls =[ ...imageUrls ]
+  // 用来记录url - response 的映射
+  // 保证输出列表与输入顺序一致
+  let rs = new Map()
+  // 递归的去取url进行请求
+  function run() {
+    if(urls.length > 0) {
+      // 取一个，便少一个
+      const url = urls.shift()
+      // console.log(url, ' [start at] ', ( new Date()).getTime() % 10000)
+      return handler(url).then(res => {
+        // console.log(url, ' [end at] ', ( new Date()).getTime() % 10000)
+        rs.set(url, res)
+        return run()
+      })
+    }
+  }
+  // 当imageUrls.length < limit的时候，我们也没有必要去创建多余的Promise
+  const promiseList = Array(Math.min(limit, imageUrls.length))
+    // 这里用Array.protetype.fill做了简写，但不能进一步简写成.fill(run())
+    .fill(Promise.resolve())
+    .map(promise => promise.then(run))
+    
+  return Promise.all(promiseList).then(() => imageUrls.map(item => rs.get(item)))
+}
+```
+
+普通代码实现
+
+```javascript
+function multiRequest(urls = [], maxNum) {
+  // 请求总数量
+  const len = urls.length;
+  // 根据请求数量创建一个数组来保存请求的结果
+  const result = new Array(len).fill(false);
+  // 当前完成的数量
+  let count = 0;
+  return new Promise((resolve, reject) => {
+    // 请求maxNum个
+    while (count < maxNum) {
+      next();
+    }
+    function next() {
+      let current = count++;
+      // 处理边界条件
+      if (current >= len) {
+        // 请求全部完成就将promise置为成功状态, 然后将result作为promise值返回
+        !result.includes(false) && resolve(result);
+        return;
+      }
+      const url = urls[current];
+      console.log(`开始 ${current}`, new Date().toLocaleString());
+      fetch(url)
+        .then((res) => {
+          // 保存请求结果
+          result[current] = res;
+          console.log(`完成 ${current}`, new Date().toLocaleString());
+          // 请求没有全部完成, 就递归
+          if (current < len) {
+            next();
+          }
+        })
+        .catch((err) => {
+          console.log(`结束 ${current}`, new Date().toLocaleString());
+          result[current] = err;
+          // 请求没有全部完成, 就递归
+          if (current < len) {
+            next();
+          }
+        });
+    }
+  });
+}
+```
 
 ### 8.快速排序
 
@@ -3889,7 +4295,7 @@ function debounce(fn, wait) {
 }
 ```
 ### 
-### 10 手动实现 bind
+### 10 手动实现 bind,call,apply
 
 ```javascript
 Function.prototype.bind = function(context) {
@@ -3907,7 +4313,8 @@ Function.prototype.myBind = function (context) {
     return _this.apply(context, args.concat(...arguments))
   }
 ```
-* ```javascript
+* call
+```javascript
 Function.prototype.myCall = function(context, ...args) {
   context = context || window
   let fn = Symbol()
@@ -3958,6 +4365,15 @@ var eventBus = {
         fn(data);
       })
     }
-  }
+  },
+  once: function(eventName, fn) {
+     var _this = this;
+      var only = function() {
+        fn.apply(_this, arguments);
+        _this.off(eventName, fn);
+      }
+      _this.on(eventName, only);
+      }
 };
 ```
+
